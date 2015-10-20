@@ -284,10 +284,10 @@ func testValidateSuccessfulRootRotation(t *testing.T, keyAlg data.KeyAlgorithm, 
 	signedTestRoot, err := testRoot.ToSigned()
 	assert.NoError(t, err)
 
-	err = signed.Sign(replUnlockedCryptoService.CryptoService, signedTestRoot, replRootKey)
+	err = signed.Sign(replUnlockedCryptoService.CryptoService, "root", signedTestRoot, replRootKey)
 	assert.NoError(t, err)
 
-	err = signed.Sign(origUnlockedCryptoService.CryptoService, signedTestRoot, origRootKey)
+	err = signed.Sign(origUnlockedCryptoService.CryptoService, "root", signedTestRoot, origRootKey)
 	assert.NoError(t, err)
 
 	//
@@ -378,7 +378,7 @@ func testValidateRootRotationMissingOrigSig(t *testing.T, keyAlg data.KeyAlgorit
 	assert.NoError(t, err)
 
 	// We only sign with the new key, and not with the original one.
-	err = signed.Sign(replUnlockedCryptoService.CryptoService, signedTestRoot, replRootKey)
+	err = signed.Sign(replUnlockedCryptoService.CryptoService, "root", signedTestRoot, replRootKey)
 	assert.NoError(t, err)
 
 	//
@@ -470,7 +470,7 @@ func testValidateRootRotationMissingNewSig(t *testing.T, keyAlg data.KeyAlgorith
 	assert.NoError(t, err)
 
 	// We only sign with the old key, and not with the new one
-	err = signed.Sign(replUnlockedCryptoService.CryptoService, signedTestRoot, origRootKey)
+	err = signed.Sign(replUnlockedCryptoService.CryptoService, "root", signedTestRoot, origRootKey)
 	assert.NoError(t, err)
 
 	//

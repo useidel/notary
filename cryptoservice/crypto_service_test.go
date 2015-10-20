@@ -1,8 +1,9 @@
 package cryptoservice
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/docker/notary/trustmanager"
 	"github.com/endophage/gotuf/data"
@@ -37,15 +38,7 @@ func testCryptoService(t *testing.T, keyAlgo data.KeyAlgorithm, verifier signed.
 	err = verifier.Verify(tufKey, signatures[0].Signature, content)
 	assert.NoError(t, err, "verification failed")
 
-	// Test GetKey
-	retrievedKey := cryptoService.GetKey(tufKey.ID())
-	assert.Equal(t, tufKey.Public(), retrievedKey.Public(), "retrieved key didn't match")
-
-	assert.Nil(t, cryptoService.GetKey("boguskeyid"), "non-nil result for bogus keyid")
-
 	// Test RemoveKey
 	err = cryptoService.RemoveKey(tufKey.ID())
 	assert.NoError(t, err, "could not remove key")
-	retrievedKey = cryptoService.GetKey(tufKey.ID())
-	assert.Nil(t, retrievedKey, "remove didn't work")
 }

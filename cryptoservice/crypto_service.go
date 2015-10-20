@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -66,39 +67,57 @@ func (ccs *CryptoService) Create(role string, algorithm data.KeyAlgorithm) (data
 	return data.PublicKeyFromPrivate(privKey), nil
 }
 
-// GetKey returns a key by ID
-func (ccs *CryptoService) GetKey(keyID string) data.PublicKey {
-	key, _, err := ccs.keyStore.GetKey(keyID)
-	if err != nil {
-		return nil
-	}
-	return data.PublicKeyFromPrivate(key)
-}
-
 // RemoveKey deletes a key by ID
 func (ccs *CryptoService) RemoveKey(keyID string) error {
 	return ccs.keyStore.RemoveKey(keyID)
 }
 
+func X509ECDSAPublickeyID(certPubKey data.PublicKey) (string, error) {
+	cert, err := trustmanager.LoadCertFromPEM(certPubKey.Public())
+	if err != nil {
+		return "", err
+	}
+	pubKey, ok := cert.PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return "", errors.New("Failed to parse ECDSA from certificate")
+	}
+
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(&pubKey)
+	if err != nil {
+		return "", err
+	}
+	return data.NewPublicKey(certPubKey.Algorithm(), pubKeyBytes).ID(), nil
+}
+
 // Sign returns the signatures for the payload with a set of keyIDs. It ignores
 // errors to sign and expects the called to validate if the number of returned
 // signatures is adequate.
-func (ccs *CryptoService) Sign(keyIDs []string, payload []byte) ([]data.Signature, error) {
-	signatures := make([]data.Signature, 0, len(keyIDs))
-	for _, keyid := range keyIDs {
+func (ccs *CryptoService) Sign(role string, pubKeys []data.PublicKey, payload []byte) ([]data.Signature, error) {
+	signatures := make([]data.Signature, 0, len(pubKeys))
+	for _, k := range pubKeys {
+		keyID := k.ID()
+		algorithm := k.Algorithm()
+
+		if algorithm == data.ECDSAx509Key {
+			pubKeyID, err := X509ECDSAPublickeyID(k)
+			if err == nil {
+				keyID = pubKeyID
+				algorithm = data.ECDSAKey
+			}
+		}
+
 		// ccs.gun will be empty if this is the root key
-		keyName := filepath.Join(ccs.gun, keyid)
+		keyName := filepath.Join(ccs.gun, keyID)
 
 		var privKey data.PrivateKey
 		var err error
 
 		privKey, _, err = ccs.keyStore.GetKey(keyName)
 		if err != nil {
-			logrus.Debugf("error attempting to retrieve key ID: %s, %v", keyid, err)
+			logrus.Debugf("error attempting to retrieve key ID: %s, %v", keyID, err)
 			return nil, err
 		}
 
-		algorithm := privKey.Algorithm()
 		var sigAlgorithm data.SigAlgorithm
 		var sig []byte
 
@@ -115,15 +134,15 @@ func (ccs *CryptoService) Sign(keyIDs []string, payload []byte) ([]data.Signatur
 			sigAlgorithm = data.EDDSASignature
 		}
 		if err != nil {
-			logrus.Debugf("ignoring error attempting to %s sign with keyID: %s, %v", algorithm, keyid, err)
+			logrus.Debugf("ignoring error attempting to %s sign with keyID: %s, %v", algorithm, keyID, err)
 			return nil, err
 		}
 
-		logrus.Debugf("appending %s signature with Key ID: %s", algorithm, keyid)
+		logrus.Debugf("appending %s signature with Key ID: %s", algorithm, keyID)
 
 		// Append signatures to result array
 		signatures = append(signatures, data.Signature{
-			KeyID:     keyid,
+			KeyID:     keyID,
 			Method:    sigAlgorithm,
 			Signature: sig[:],
 		})

@@ -50,9 +50,10 @@ func NewNotarySigner(hostname string, port string, tlscafile string) *NotarySign
 }
 
 // Sign signs a byte string with a number of KeyIDs
-func (trust *NotarySigner) Sign(keyIDs []string, toSign []byte) ([]data.Signature, error) {
-	signatures := make([]data.Signature, 0, len(keyIDs))
-	for _, ID := range keyIDs {
+func (trust *NotarySigner) Sign(role string, pubKeys []data.PublicKey, toSign []byte) ([]data.Signature, error) {
+	signatures := make([]data.Signature, 0, len(pubKeys))
+	for _, k := range pubKeys {
+		ID := k.ID()
 		keyID := pb.KeyID{ID: ID}
 		sr := &pb.SignatureRequest{
 			Content: toSign,
@@ -85,15 +86,6 @@ func (trust *NotarySigner) Create(role string, algorithm data.KeyAlgorithm) (dat
 func (trust *NotarySigner) RemoveKey(keyid string) error {
 	_, err := trust.kmClient.DeleteKey(context.Background(), &pb.KeyID{ID: keyid})
 	return err
-}
-
-// GetKey retrieves a key
-func (trust *NotarySigner) GetKey(keyid string) data.PublicKey {
-	publicKey, err := trust.kmClient.GetKeyInfo(context.Background(), &pb.KeyID{ID: keyid})
-	if err != nil {
-		return nil
-	}
-	return data.NewPublicKey(data.KeyAlgorithm(publicKey.KeyInfo.Algorithm.Algorithm), publicKey.PublicKey)
 }
 
 // CheckHealth checks the health of one of the clients, since both clients run

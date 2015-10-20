@@ -82,32 +82,6 @@ func (s *KeyManagementServer) DeleteKey(ctx context.Context, keyID *pb.KeyID) (*
 	return &pb.Void{}, nil
 }
 
-//GetKeyInfo returns they PublicKey associated with a KeyID
-func (s *KeyManagementServer) GetKeyInfo(ctx context.Context, keyID *pb.KeyID) (*pb.PublicKey, error) {
-	_, service, err := FindKeyByID(s.CryptoServices, keyID)
-
-	logger := ctxu.GetLogger(ctx)
-
-	if err != nil {
-		logger.Errorf("GetKeyInfo: key %s not found", keyID.ID)
-		return nil, grpc.Errorf(codes.NotFound, "key %s not found", keyID.ID)
-	}
-
-	tufKey := service.GetKey(keyID.ID)
-	if tufKey == nil {
-		logger.Errorf("GetKeyInfo: key %s not found", keyID.ID)
-		return nil, grpc.Errorf(codes.NotFound, "key %s not found", keyID.ID)
-	}
-	logger.Debug("GetKeyInfo: Returning PublicKey for KeyID ", keyID.ID)
-	return &pb.PublicKey{
-		KeyInfo: &pb.KeyInfo{
-			KeyID:     &pb.KeyID{ID: tufKey.ID()},
-			Algorithm: &pb.Algorithm{Algorithm: tufKey.Algorithm().String()},
-		},
-		PublicKey: tufKey.Public(),
-	}, nil
-}
-
 //CheckHealth returns the HealthStatus with the service
 func (s *KeyManagementServer) CheckHealth(ctx context.Context, v *pb.Void) (*pb.HealthStatus, error) {
 	return &pb.HealthStatus{
