@@ -11,9 +11,6 @@ service KeyManagement {
   // DeleteKey deletes the key associated with a KeyID
   rpc DeleteKey(KeyID) returns (Void) {}
 
-  // GetKeyInfo returns the PublicKey associated with a KeyID
-  rpc GetKeyInfo(KeyID) returns (PublicKey) {}
-
   // CheckHealth returns the HealthStatus with the service
   rpc CheckHealth(Void) returns (HealthStatus) {}
 }

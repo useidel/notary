@@ -170,8 +170,6 @@ type KeyManagementClient interface {
 	CreateKey(ctx context.Context, in *Algorithm, opts ...grpc.CallOption) (*PublicKey, error)
 	// DeleteKey deletes the key associated with a KeyID
 	DeleteKey(ctx context.Context, in *KeyID, opts ...grpc.CallOption) (*Void, error)
-	// GetKeyInfo returns the PublicKey associated with a KeyID
-	GetKeyInfo(ctx context.Context, in *KeyID, opts ...grpc.CallOption) (*PublicKey, error)
 	// CheckHealth returns the HealthStatus with the service
 	CheckHealth(ctx context.Context, in *Void, opts ...grpc.CallOption) (*HealthStatus, error)
 }
@@ -202,15 +200,6 @@ func (c *keyManagementClient) DeleteKey(ctx context.Context, in *KeyID, opts ...
 	return out, nil
 }
 
-func (c *keyManagementClient) GetKeyInfo(ctx context.Context, in *KeyID, opts ...grpc.CallOption) (*PublicKey, error) {
-	out := new(PublicKey)
-	err := grpc.Invoke(ctx, "/proto.KeyManagement/GetKeyInfo", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *keyManagementClient) CheckHealth(ctx context.Context, in *Void, opts ...grpc.CallOption) (*HealthStatus, error) {
 	out := new(HealthStatus)
 	err := grpc.Invoke(ctx, "/proto.KeyManagement/CheckHealth", in, out, c.cc, opts...)
@@ -227,8 +216,6 @@ type KeyManagementServer interface {
 	CreateKey(context.Context, *Algorithm) (*PublicKey, error)
 	// DeleteKey deletes the key associated with a KeyID
 	DeleteKey(context.Context, *KeyID) (*Void, error)
-	// GetKeyInfo returns the PublicKey associated with a KeyID
-	GetKeyInfo(context.Context, *KeyID) (*PublicKey, error)
 	// CheckHealth returns the HealthStatus with the service
 	CheckHealth(context.Context, *Void) (*HealthStatus, error)
 }
@@ -261,18 +248,6 @@ func _KeyManagement_DeleteKey_Handler(srv interface{}, ctx context.Context, dec 
 	return out, nil
 }
 
-func _KeyManagement_GetKeyInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
-	in := new(KeyID)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	out, err := srv.(KeyManagementServer).GetKeyInfo(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func _KeyManagement_CheckHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(Void)
 	if err := dec(in); err != nil {
@@ -296,10 +271,6 @@ var _KeyManagement_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteKey",
 			Handler:    _KeyManagement_DeleteKey_Handler,
-		},
-		{
-			MethodName: "GetKeyInfo",
-			Handler:    _KeyManagement_GetKeyInfo_Handler,
 		},
 		{
 			MethodName: "CheckHealth",
