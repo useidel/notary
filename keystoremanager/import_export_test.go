@@ -60,7 +60,6 @@ func TestImportExportZip(t *testing.T) {
 	rootKeyID, err := repo.KeyStoreManager.GenRootKey(data.ECDSAKey)
 	assert.NoError(t, err, "error generating root key: %s", err)
 
-	fmt.Println(rootKeyID)
 	err = repo.Initialize(rootKeyID)
 	assert.NoError(t, err, "error creating repository: %s", err)
 
@@ -348,7 +347,7 @@ func TestImportExportRootKey(t *testing.T) {
 	keyReader, err := os.Open(tempKeyFilePath)
 	assert.NoError(t, err, "could not open key file")
 
-	err = repo2.KeyStoreManager.ImportRootKey(keyReader, rootKeyID)
+	err = repo2.KeyStoreManager.ImportRootKey(keyReader)
 	assert.NoError(t, err)
 	keyReader.Close()
 
@@ -368,11 +367,11 @@ func TestImportExportRootKey(t *testing.T) {
 	decryptedPEMBytes, err := trustmanager.KeyToPEM(privKey)
 	assert.NoError(t, err, "could not convert key to PEM")
 
-	err = repo2.KeyStoreManager.ImportRootKey(bytes.NewReader(decryptedPEMBytes), rootKeyID)
+	err = repo2.KeyStoreManager.ImportRootKey(bytes.NewReader(decryptedPEMBytes))
 	assert.EqualError(t, err, keystoremanager.ErrRootKeyNotEncrypted.Error())
 
 	// Try to import garbage and make sure it doesn't succeed
-	err = repo2.KeyStoreManager.ImportRootKey(strings.NewReader("this is not PEM"), rootKeyID)
+	err = repo2.KeyStoreManager.ImportRootKey(strings.NewReader("this is not PEM"))
 	assert.EqualError(t, err, keystoremanager.ErrNoValidPrivateKey.Error())
 
 	// Should be able to unlock the root key with the old password
@@ -429,7 +428,7 @@ func TestImportExportRootKeyReencrypt(t *testing.T) {
 	keyReader, err := os.Open(tempKeyFilePath)
 	assert.NoError(t, err, "could not open key file")
 
-	err = repo2.KeyStoreManager.ImportRootKey(keyReader, rootKeyID)
+	err = repo2.KeyStoreManager.ImportRootKey(keyReader)
 	assert.NoError(t, err)
 	keyReader.Close()
 
