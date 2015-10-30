@@ -26,7 +26,9 @@ import (
 	"github.com/docker/notary/tuf/store"
 )
 
-const maxSize = 5 << 20
+const (
+	maxSize = 5 << 20
+)
 
 func init() {
 	data.SetDefaultExpiryTimes(
@@ -104,13 +106,19 @@ func NewTarget(targetName string, targetPath string) (*Target, error) {
 func NewNotaryRepository(baseDir, gun, baseURL string, rt http.RoundTripper,
 	passphraseRetriever passphrase.Retriever) (*NotaryRepository, error) {
 
-	keyStoreManager, err := keystoremanager.NewKeyStoreManager(baseDir, passphraseRetriever)
+	keysPath := filepath.Join(baseDir, keystoremanager.PrivDir)
+	fileKeyStore, err := trustmanager.NewKeyFileStore(keysPath, passphraseRetriever)
 	if err != nil {
 		return nil, err
 	}
 
-	yubiKeyStore := api.NewYubiKeyStore()
-	cryptoService := cryptoservice.NewCryptoService(gun, yubiKeyStore, keyStoreManager.KeyStore)
+	keyStoreManager, err := keystoremanager.NewKeyStoreManager(baseDir, fileKeyStore)
+	if err != nil {
+		return nil, err
+	}
+
+	yubiKeyStore := api.NewYubiKeyStore(passphraseRetriever)
+	cryptoService := cryptoservice.NewCryptoService(gun, yubiKeyStore, fileKeyStore)
 
 	nRepo := &NotaryRepository{
 		gun:             gun,
