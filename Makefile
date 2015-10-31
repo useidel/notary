@@ -15,6 +15,7 @@ GO_LDFLAGS=-ldflags "-w $(CTIMEVAR)"
 GO_LDFLAGS_STATIC=-ldflags "-w $(CTIMEVAR) -extldflags -static"
 GOOSES = darwin freebsd linux
 GOARCHS = amd64
+NOTARY_BUILDFLAGS="pkcs11"
 GO_EXC = go
 NOTARYDIR := /go/src/github.com/docker/notary
 
@@ -39,15 +40,15 @@ version/version.go:
 
 ${PREFIX}/bin/notary-server: NOTARY_VERSION $(shell find . -type f -name '*.go')
 	@echo "+ $@"
-	@godep go build -o $@ ${GO_LDFLAGS} ./cmd/notary-server
+	@godep go build -tags ${NOTARY_BUILDFLAGS} -o $@ ${GO_LDFLAGS} ./cmd/notary-server
 
 ${PREFIX}/bin/notary: NOTARY_VERSION $(shell find . -type f -name '*.go')
 	@echo "+ $@"
-	@godep go build -o $@ ${GO_LDFLAGS} ./cmd/notary
+	@godep go build -tags ${NOTARY_BUILDFLAGS} -o $@ ${GO_LDFLAGS} ./cmd/notary
 
 ${PREFIX}/bin/notary-signer: NOTARY_VERSION $(shell find . -type f -name '*.go')
 	@echo "+ $@"
-	@godep go build -o $@ ${GO_LDFLAGS} ./cmd/notary-signer
+	@godep go build -tags ${NOTARY_BUILDFLAGS} -o $@ ${GO_LDFLAGS} ./cmd/notary-signer
 
 vet:
 	@echo "+ $@"
@@ -63,16 +64,16 @@ lint:
 
 build:
 	@echo "+ $@"
-	@go build -v ${GO_LDFLAGS} ./...
+	@go build -tags ${NOTARY_BUILDFLAGS} -v ${GO_LDFLAGS} ./...
 
 test: OPTS =
 test:
 	@echo "+ $@ $(OPTS)"
-	go test $(OPTS) ./...
+	go test -tags ${NOTARY_BUILDFLAGS} $(OPTS) ./...
 
 test-full: vet lint
 	@echo "+ $@"
-	go test -v ./...
+	go test -tags ${NOTARY_BUILDFLAGS} -v ./...
 
 protos:
 	@protoc --go_out=plugins=grpc:. proto/*.proto
