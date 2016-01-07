@@ -1516,7 +1516,7 @@ func TestNotInitializedOnPublish(t *testing.T) {
 
 	err = repo.Publish()
 	assert.Error(t, err)
-	assert.IsType(t, &ErrRepoNotInitialized{}, err)
+	assert.IsType(t, ErrRepoNotInitialized{}, err)
 }
 
 type cannotCreateKeys struct {
