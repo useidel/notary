@@ -290,6 +290,7 @@ func getRawKey(s LimitedFileStore, name string) ([]byte, string, error) {
 
 	filename := name + "_" + keyAlias
 	var keyBytes []byte
+	fmt.Println("Inside getRawKey: %s", filepath.Join(getSubdir(keyAlias), filename))
 	keyBytes, err = s.Get(filepath.Join(getSubdir(keyAlias), filename))
 	if err != nil {
 		return nil, "", err

@@ -69,8 +69,8 @@ func (cs *CryptoService) Create(role, algorithm string) (data.PublicKey, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to add key to filestore: %v", err)
 	}
-	return nil, fmt.Errorf("keystores would not accept new private keys for unknown reasons")
 
+	return nil, fmt.Errorf("keystores would not accept new private keys for unknown reasons")
 }
 
 // GetPrivateKey returns a private key by ID. It tries to get the key first
@@ -81,6 +81,7 @@ func (cs *CryptoService) GetPrivateKey(keyID string) (k data.PrivateKey, role st
 	keyPaths := []string{keyID, filepath.Join(cs.gun, keyID)}
 	for _, ks := range cs.keyStores {
 		for _, keyPath := range keyPaths {
+			fmt.Println("Attempting path: ", keyPath)
 			k, role, err = ks.GetKey(keyPath)
 			if err == nil {
 				return
